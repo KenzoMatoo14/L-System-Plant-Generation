@@ -22,6 +22,7 @@ def turtle_segments(instructions : str, angle : float, length : int):
     segments = []
     position = Punto(0, 0)
     direction = math.pi / 2
+    profundidad = 0
     
     for simbolo in instructions:
         if simbolo == "F": #AVANZA
@@ -29,7 +30,7 @@ def turtle_segments(instructions : str, angle : float, length : int):
             new_y = position.y + (length * math.sin(direction))
             new_position = Punto(new_x, new_y)
             
-            segments.append(Segmento(position, new_position))
+            segments.append((Segmento(position, new_position), profundidad))
             position = new_position
             
         if simbolo == "+":
@@ -39,23 +40,28 @@ def turtle_segments(instructions : str, angle : float, length : int):
             direction -= angle
             
         if simbolo == "[":
-            position_stack.append((position, direction))
-            
+            position_stack.append((position, direction, profundidad))
+            profundidad += 1
         if simbolo == "]":
-            position, direction = position_stack.pop()
+            position, direction, profundidad = position_stack.pop()
 
     return segments
 
-rule1 = Rule("F", "FF+[+F-F-F]-[-F+F+F]")
-instructions = generar_l_system(3, "F", rule1)
+rule1 = Rule({"F": "FF+[+F-F-F]-[-F+F+F]"})
+instructions = generar_l_system(2, "F", rule1)
 
 angle = math.radians(25)
 lenght = 1
 segmentos = turtle_segments(instructions, angle, lenght)
 
 fig, ax = plt.subplots(figsize=(8, 8))
-for seg in segmentos:
-    graficar_segmento(seg, ax=ax, color='green', linewidth=1)
+
+max_prof = max(p for _, p in segmentos) or 1
+for seg, prof in segmentos:
+    t = prof / max_prof
+    color = (0.45 - 0.25*t, 0.25 + 0.35*t, 0.15)  # marrón -> verde
+    grosor = max(0.5, 4.0 * (1 - t))
+    graficar_segmento(seg, ax=ax, color=color, linewidth=grosor)
     
 configurar_grafico(ax, title='Árbol L-System')
 plt.show()
